@@ -232,35 +232,9 @@ function PGF.DoFilterSearchResults(results)
         env.arena3v3 = activity == 7 or activity == 490
 
         -- raids            normal             heroic             mythic
-        env.hm   = activity ==  37 or activity ==  38 or activity == 399  -- Highmaul
-        env.brf  = activity ==  39 or activity ==  40 or activity == 400  -- Blackrock Foundry
-        env.hfc  = activity == 409 or activity == 410 or activity == 412  -- Hellfire Citadel
-        env.en   = activity == 413 or activity == 414 or activity == 468  -- The Emerald Nightmare
-        env.nh   = activity == 415 or activity == 416 or activity == 481  -- The Nighthold
-        env.tov  = activity == 456 or activity == 457 or activity == 480  -- Trial of Valor
-        env.tos  = activity == 479 or activity == 478 or activity == 492  -- Tomb of Sargeras
-        env.atbt = activity == 482 or activity == 483 or activity == 493  -- Antorus, the Burning Throne
         env.uldir= activity == 494 or activity == 495 or activity == 496  -- Uldir
 
         -- dungeons         normal             heroic             mythic            mythic+
-        env.eoa  = activity == 425 or activity == 435 or activity == 445 or activity == 459  -- Eye of Azshara
-        env.dht  = activity == 426 or activity == 436 or activity == 446 or activity == 460  -- Darkheart Thicket
-        env.hov  = activity == 427 or activity == 437 or activity == 447 or activity == 461  -- Halls of Valor
-        env.nl   = activity == 428 or activity == 438 or activity == 448 or activity == 462  -- Neltharion's Lair
-        env.vh   = activity == 429 or activity == 439 or activity == 449                     -- Violet Hold
-        env.brh  = activity == 430 or activity == 440 or activity == 450 or activity == 463  -- Black Rook Hold
-        env.votw = activity == 431 or activity == 441 or activity == 451 or activity == 464  -- Vault of the Wardens
-        env.mos  = activity == 432 or activity == 442 or activity == 452 or activity == 465  -- Maw of Souls
-        env.cos  = activity == 433 or activity == 443 or activity == 453 or activity == 466  -- Court of Stars
-        env.aw   = activity == 434 or activity == 444 or activity == 454 or activity == 467  -- The Arcway
-        env.kara =                                       activity == 455                     -- Karazhan
-                                   or activity == 470                    or activity == 471  -- Lower Karazahn
-                                   or activity == 472                    or activity == 473  -- Upper Karazhan
-        env.lkara =                   activity == 470                    or activity == 471  -- Lower Karazahn
-        env.ukara =                   activity == 472                    or activity == 473  -- Upper Karazhan
-        env.coen =                    activity == 474 or activity == 475 or activity == 476  -- Cathedral of Eternal Night
-        env.sott =                    activity == 484 or activity == 485 or activity == 486  -- Seat of the Triumvirate
-
         env.ad   = activity == 501 or activity == 500 or activity == 499 or activity == 502  -- Atal'Dazar
                 or activity == 543
         env.tosl = activity == 503 or activity == 505 or activity == 645 or activity == 504  -- Temple of Sethraliss

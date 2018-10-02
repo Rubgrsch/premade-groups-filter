@@ -116,6 +116,24 @@ function PGF.SortByFriendsAndAge(id1, id2)
     return age1 < age2
 end
 
+local myGroup = {TANK = 1, HEALER = 1, DAMAGER = 3, NONE = 0}
+local function checkMyGroup()
+	myGroup.TANK, myGroup.HEALER, myGroup.DAMAGER, myGroup.NONE = 1, 1, 3, 0
+	local myRole = GetSpecializationRole(GetSpecialization())
+	myGroup[myRole] = myGroup[myRole] - 1
+	for i = 1, 4 do
+		local unit = "party"..i
+		local role = UnitGroupRolesAssigned(unit)
+		if role then myGroup[role] = myGroup[role] - 1 end
+	end
+end
+
+local f = CreateFrame("Frame")
+f:RegisterEvent("PLAYER_LOGIN")
+f:RegisterEvent("GROUP_ROSTER_UPDATE")
+f:RegisterEvent("ROLE_CHANGED_INFORM")
+f:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+f:SetScript("OnEvent", checkMyGroup)
 function PGF.DoFilterSearchResults(results)
     --print(debugstack())
     --print("filtering, size is "..#results)
@@ -184,6 +202,7 @@ function PGF.DoFilterSearchResults(results)
         env.groupid = avGroupID
         env.autoinv = isAutoAccept
         env.questid = questID
+		env.smart = (difficulty ~= C.MYTHICPLUS) or ((env.tanks <= myGroup.TANK) and (env.healers <= myGroup.HEALER) and (env.dps <= myGroup.DAMAGER))
 
         for i = 1, numMembers do
             local role, class = C_LFGList.GetSearchResultMemberInfo(resultID, i);

@@ -19,7 +19,6 @@ Modules\Util.lua
 Modules\Difficulty.lua
 Modules\Lockout.lua
 Modules\Expression.lua
-Modules\Macro.lua
 Main.lua
 Dialog\PopupMenu.xml
 Dialog\PopupMenu.lua

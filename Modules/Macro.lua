@@ -23,13 +23,13 @@ local L = PGF.L
 local C = PGF.C
 
 function PGF.Macro(exp)
-    local dialog = PremadeGroupsFilterDialog
-    if dialog and dialog:IsVisible() then
-        PGF.Dialog_Reset()
-        dialog.Expression.EditBox:SetText(exp)
-        PGF.Dialog_Expression_OnTextChanged(dialog.Expression.EditBox)
-        dialog.RefreshButton:Click()
-    end
+	local dialog = PremadeGroupsFilterDialog
+	if dialog and dialog:IsVisible() then
+		PGF.Dialog_Reset()
+		dialog.Expression.EditBox:SetText(exp)
+		PGF.Dialog_Expression_OnTextChanged(dialog.Expression.EditBox)
+		dialog.RefreshButton:Click()
+	end
 end
 
 PremadeGroupsFilter.Macro = PGF.Macro

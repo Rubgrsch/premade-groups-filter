@@ -23,56 +23,56 @@ local L = PGF.L
 local C = PGF.C
 
 StaticPopupDialogs["PGF_ERRORPOPUP"] = {
-    text = "%s",
-    button1 = L["button.ok"],
-    timeout = 0,
-    whileDead = true,
-    hideOnEscape = true,
-    preferredIndex = 3,
+	text = "%s",
+	button1 = L["button.ok"],
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3,
 }
 
 function PGF.HandleSyntaxError(error)
-    StaticPopup_Show("PGF_ERRORPOPUP", string.format(L["error.syntax"], error))
+	StaticPopup_Show("PGF_ERRORPOPUP", string.format(L["error.syntax"], error))
 end
 
 function PGF.HandleSemanticError(error)
-    if error and (error:find("name") or error:find("comment") or error:find("findnumber")) then
-        StaticPopup_Show("PGF_ERRORPOPUP", string.format(L["error.semantic.protected"], error))
-    else
-        StaticPopup_Show("PGF_ERRORPOPUP", string.format(L["error.semantic"], error))
-    end
+	if error and (error:find("name") or error:find("comment") or error:find("findnumber")) then
+		StaticPopup_Show("PGF_ERRORPOPUP", string.format(L["error.semantic.protected"], error))
+	else
+		StaticPopup_Show("PGF_ERRORPOPUP", string.format(L["error.semantic"], error))
+	end
 end
 
 PGF.filterMetaTable = {
-    __mode = "k",
-    __index = function(table, key)
-        local func, error = loadstring("return " .. key)
-        if error then
-            PGF.HandleSyntaxError(error)
-            return nil
-        end
-        table[key] = func
-        return func
-    end,
-    tonumber = tonumber
+	__mode = "k",
+	__index = function(table, key)
+		local func, error = loadstring("return " .. key)
+		if error then
+			PGF.HandleSyntaxError(error)
+			return nil
+		end
+		table[key] = func
+		return func
+	end,
+	tonumber = tonumber
 }
 
 PGF.filter = setmetatable({}, PGF.filterMetaTable)
 
 function PGF.DoesPassThroughFilter(env, exp)
-    --local exp = "mythic and tansk < 0 and members==4"  -- raises semantic error
-    --local exp = "and and tanks==0 and members==4"      -- raises syntax error
-    --local exp = "mythic and tanks==0 and members==4"   -- correct statement
-    local filter = PGF.filter[exp]
-    if filter then
-        setfenv(filter, env)
-        local hasFilterError, filterResult = pcall(filter)
-        if hasFilterError then
-            return filterResult
-        else
-            PGF.HandleSemanticError(filterResult)
-            return true
-        end
-    end
-    return true
+	--local exp = "mythic and tansk < 0 and members==4"  -- raises semantic error
+	--local exp = "and and tanks==0 and members==4"	  -- raises syntax error
+	--local exp = "mythic and tanks==0 and members==4"   -- correct statement
+	local filter = PGF.filter[exp]
+	if filter then
+		setfenv(filter, env)
+		local hasFilterError, filterResult = pcall(filter)
+		if hasFilterError then
+			return filterResult
+		else
+			PGF.HandleSemanticError(filterResult)
+			return true
+		end
+	end
+	return true
 end

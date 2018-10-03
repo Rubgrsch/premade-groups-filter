@@ -168,8 +168,6 @@ function PGF.DoFilterSearchResults(results)
         env.activityname = avName:lower()
         env.leader = leaderName and leaderName:lower() or ""
         env.age = math.floor(age / 60) -- age in minutes
-        env.voice = voiceChat and voiceChat ~= ""
-        env.voicechat = voiceChat
         env.ilvl = iLvl or 0
         env.hlvl = honorLevel or 0
         env.friends = numBNetFriends + numCharFriends + numGuildMates
@@ -177,17 +175,12 @@ function PGF.DoFilterSearchResults(results)
         env.tanks = memberCounts.TANK
         env.heals = memberCounts.HEALER
         env.healers = memberCounts.HEALER
-        env.ranged = 0        -- incremented below
-        env.ranged_strict = 0 -- incremented below
-        env.melees = 0        -- incremented below
-        env.melees_strict = 0 -- incremented below
         env.dps = memberCounts.DAMAGER + memberCounts.NOROLE
         env.defeated = numGroupDefeated
         env.normal     = difficulty == C.NORMAL
         env.heroic     = difficulty == C.HEROIC
         env.mythic     = difficulty == C.MYTHIC
         env.mythicplus = difficulty == C.MYTHICPLUS
-        env.myrealm = leaderName and leaderName ~= "" and not leaderName:find('-')
         env.partialid = numPlayerDefeated > 0
         env.fullid = numPlayerDefeated > 0 and numPlayerDefeated == maxBosses
         env.noid = not env.partialid and not env.fullid
@@ -204,57 +197,8 @@ function PGF.DoFilterSearchResults(results)
         env.questid = questID
 		env.smart = (difficulty ~= C.MYTHICPLUS) or ((env.tanks <= myGroup.TANK) and (env.healers <= myGroup.HEALER) and (env.dps <= myGroup.DAMAGER))
 
-        for i = 1, numMembers do
-            local role, class = C_LFGList.GetSearchResultMemberInfo(resultID, i);
-            local classPlural = class:lower() .. "s" -- plural form of the class in english
-            env[classPlural] = (env[classPlural] or 0) + 1
-            if role then
-                local classRolePlural = C.ROLE_PREFIX[role] .. "_" .. class:lower() .. "s"
-                local roleClassPlural = class:lower() .. "_" .. C.ROLE_SUFFIX[role]
-                env[classRolePlural] = (env[classRolePlural] or 0) + 1
-                env[roleClassPlural] = (env[roleClassPlural] or 0) + 1
-                if role == "DAMAGER" then
-                    if C.DPS_CLASS_TYPE[class].range and C.DPS_CLASS_TYPE[class].melee then
-                        env.ranged = env.ranged + 1
-                        env.melees = env.melees + 1
-                    elseif C.DPS_CLASS_TYPE[class].range then
-                        env.ranged = env.ranged + 1
-                        env.ranged_strict = env.ranged_strict + 1
-                    elseif C.DPS_CLASS_TYPE[class].melee then
-                        env.melees = env.melees + 1
-                        env.melees_strict = env.melees_strict + 1
-                    end
-                end
-            end
-        end
-
         env.arena2v2 = activity == 6 or activity == 491
         env.arena3v3 = activity == 7 or activity == 490
-
-        -- raids            normal             heroic             mythic
-        env.uldir= activity == 494 or activity == 495 or activity == 496  -- Uldir
-
-        -- dungeons         normal             heroic             mythic            mythic+
-        env.ad   = activity == 501 or activity == 500 or activity == 499 or activity == 502  -- Atal'Dazar
-                or activity == 543
-        env.tosl = activity == 503 or activity == 505 or activity == 645 or activity == 504  -- Temple of Sethraliss
-                or activity == 542
-        env.tur  = activity == 506 or activity == 508 or activity == 644 or activity == 507  -- The Underrot
-                or activity == 541
-        env.tml  = activity == 509 or activity == 511 or activity == 646 or activity == 510  -- The MOTHERLODE
-                or activity == 540
-        env.kr   = activity == 512 or activity == 515 or activity == 513 or activity == 514  -- Kings' Rest
-                                                      or activity == 660 or activity == 661
-        env.fh   = activity == 516 or activity == 519 or activity == 517 or activity == 518  -- Freehold
-                or activity == 539
-        env.sots = activity == 520 or activity == 523 or activity == 521 or activity == 522  -- Shrine of the Storm
-                or activity == 538
-        env.td   = activity == 524 or activity == 527 or activity == 525 or activity == 526  -- Tol Dagor
-                or activity == 537
-        env.wm   = activity == 528 or activity == 531 or activity == 529 or activity == 530  -- Waycrest Manor
-                or activity == 536
-        env.sob  = activity == 532 or activity == 535 or activity == 533 or activity == 534  -- Siege of Boralus
-                                                      or activity == 658 or activity == 659
 
         setmetatable(env, { __index = function(table, key) return 0 end }) -- set non-initialized values to 0
         if PGF.DoesPassThroughFilter(env, exp) then

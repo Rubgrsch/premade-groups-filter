@@ -68,33 +68,6 @@ C.COLOR_LOCKOUT_MATCH   = { R = 1.0, G = 1.0, B = 1.0 } -- white
 C.FONTSIZE_TEXTBOX = 12
 C.SEARCH_ENTRY_RESET_WAIT = 2 -- wait at least 2 seconds between two resets of known premade groups
 
-C.ROLE_PREFIX = {
-    ["DAMAGER"] = "dps",
-    ["HEALER"] = "heal",
-    ["TANK"] = "tank",
-}
-
-C.ROLE_SUFFIX = {
-    ["DAMAGER"] = "dps",
-    ["HEALER"] = "heals",
-    ["TANK"] = "tanks",
-}
-
-C.DPS_CLASS_TYPE = {
-    ["DEATHKNIGHT"] = { range = false, melee = true },
-    ["DEMONHUNTER"] = { range = false, melee = true },
-    ["DRUID"]       = { range = true,  melee = true },
-    ["HUNTER"]      = { range = true,  melee = true },
-    ["PALADIN"]     = { range = false, melee = true },
-    ["PRIEST"]      = { range = true,  melee = false },
-    ["MAGE"]        = { range = true,  melee = false },
-    ["MONK"]        = { range = false, melee = true },
-    ["ROGUE"]       = { range = false, melee = true },
-    ["SHAMAN"]      = { range = true,  melee = true },
-    ["WARLOCK"]     = { range = true,  melee = false },
-    ["WARRIOR"]     = { range = false, melee = true },
-}
-
 C.MODEL_DEFAULT = {
     enabled = true,
     expression = "",

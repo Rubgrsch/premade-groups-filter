@@ -109,15 +109,19 @@ function PGF.SortByFriendsAndAge(id1, id2)
 	return age1 < age2
 end
 
-local myGroup = {TANK = 1, HEALER = 1, DAMAGER = 3, NONE = 0}
+local myGroup = {TANK = 1, HEALER = 1, DAMAGER = 3}
 local function checkMyGroup()
-	myGroup.TANK, myGroup.HEALER, myGroup.DAMAGER, myGroup.NONE = 1, 1, 3, 0
+	myGroup.TANK, myGroup.HEALER, myGroup.DAMAGER = 1, 1, 3
 	local myRole = GetSpecializationRole(GetSpecialization())
+	if not myRole then return end
 	myGroup[myRole] = myGroup[myRole] - 1
 	for i = 1, 4 do
 		local unit = "party"..i
-		local role = UnitGroupRolesAssigned(unit)
-		if role then myGroup[role] = myGroup[role] - 1 end
+		if UnitExists(unit) then
+			local role = UnitGroupRolesAssigned(unit)
+			if not myGroup[role] then role = "DAMAGER" end
+			myGroup[role] = myGroup[role] - 1
+		end
 	end
 end
 

@@ -50,7 +50,7 @@ function PGF.GetExpressionFromDifficultyModel(model)
 end
 
 function PGF.GetExpressionFromAdvancedExpression(model)
-	return (model.expression and model.expression ~= "") and (" and " .. model.expression) or ""
+	return (model.expression and model.expression ~= "") and (" and ( " .. model.expression .. " ) ") or ""
 end
 
 function PGF.GetModel()

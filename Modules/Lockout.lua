@@ -83,20 +83,20 @@ function PGF.GetMatchingBossInfo(groupDefeatedBossNames, playerDefeatedBossesNam
 	local groupBehind = 0
 	local matchingBossNames = {}
 
-	for name, _ in pairs(groupDefeatedBossNames) do
+	for name in pairs(groupDefeatedBossNames) do
 		if playerDefeatedBossesNames[name] == true then
 			matchingBossNames[name] = true
 			matching = matching + 1
 		end
 	end
 
-	for name, _ in pairs(groupDefeatedBossNames) do
+	for name in pairs(groupDefeatedBossNames) do
 		if not matchingBossNames[name] then
 			groupAhead = groupAhead + 1
 		end
 	end
 
-	for name, _ in pairs(playerDefeatedBossesNames) do
+	for name in pairs(playerDefeatedBossesNames) do
 		if not matchingBossNames[name] then
 			groupBehind = groupBehind + 1
 		end

@@ -63,11 +63,6 @@ function PGF.GetModel()
 	local modelKey = "t" .. tab .. "c" .. category .. "f" .. filters
 	if PremadeGroupsFilterState[modelKey] == nil then
 		local defaultState = {}
-		-- if we have an old v1.10 state, take it instead of the default one
-		local oldGlobalState = PremadeGroupsFilterState["v110"]
-		if oldGlobalState ~= nil then
-			defaultState = PGF.Table_Copy_Rec(oldGlobalState)
-		end
 		PGF.Table_UpdateWithDefaults(defaultState, C.MODEL_DEFAULT)
 		PremadeGroupsFilterState[modelKey] = defaultState
 	end
@@ -135,7 +130,7 @@ f:SetScript("OnEvent", checkMyGroup)
 
 local env = {}
 
-function PGF.DoFilterSearchResults(results)
+local function DoFilterSearchResults(results)
 	--print(debugstack())
 	--print("filtering, size is "..#results)
 
@@ -170,25 +165,15 @@ function PGF.DoFilterSearchResults(results)
 		env.age = math.floor(age / 60) -- age in minutes
 		env.ilvl = iLvl or 0
 		env.hlvl = honorLevel or 0
-		env.friends = numBNetFriends + numCharFriends + numGuildMates
 		env.members = numMembers
 		env.tanks = memberCounts.TANK
 		env.heals = memberCounts.HEALER
 		env.healers = memberCounts.HEALER
 		env.dps = memberCounts.DAMAGER + memberCounts.NOROLE
-		env.defeated = numGroupDefeated
 		env.normal	 = difficulty == C.NORMAL
 		env.heroic	 = difficulty == C.HEROIC
 		env.mythic	 = difficulty == C.MYTHIC
 		env.mythicplus = difficulty == C.MYTHICPLUS
-		env.partialid = numPlayerDefeated > 0
-		env.fullid = numPlayerDefeated > 0 and numPlayerDefeated == maxBosses
-		env.noid = not env.partialid and not env.fullid
-		env.matchingid = groupAhead == 0 and groupBehind == 0
-		env.bossesmatching = matching
-		env.bossesahead = groupAhead
-		env.bossesbehind = groupBehind
-		env.autoinv = isAutoAccept
 		env.smart = avMaxPlayers ~= 5 or ((env.tanks <= myGroup.TANK) and (env.healers <= myGroup.HEALER) and (env.dps <= myGroup.DAMAGER))
 
 		env.arena2v2 = activity == 6 or activity == 491
@@ -208,7 +193,7 @@ function PGF.DoFilterSearchResults(results)
 	return true
 end
 
-function PGF.OnLFGListSearchEntryUpdate(self)
+local function OnLFGListSearchEntryUpdate(self)
 	local resultID, activity, _, _, _, _, _, _, _, _, _, isDelisted, leaderName = C_LFGList.GetSearchResultInfo(self.resultID)
 	-- try once again to update the leaderName (this information is not immediately available)
 	if leaderName then PGF.currentSearchLeaders[leaderName] = true end
@@ -256,7 +241,7 @@ function PGF.OnLFGListSearchEntryOnEnter(self)
 			classInfo[class] =
 			{
 				name = classLocalized,
-				color = RAID_CLASS_COLORS[class] or NORMAL_FONT_COLOR
+				color = (RAID_CLASS_COLORS[class] or NORMAL_FONT_COLOR).colorStr
 			}
 		end
 		if not roles[role] then roles[role] = {} end
@@ -269,13 +254,13 @@ function PGF.OnLFGListSearchEntryOnEnter(self)
 		for class, count in pairs(classes) do
 			local text = "   "
 			if count > 1 then text = text .. count .. " " else text = text .. "   " end
-			text = text .. "|c" .. classInfo[class].color.colorStr ..  classInfo[class].name .. "|r "
+			text = text .. "|c" .. classInfo[class].color ..  classInfo[class].name .. "|r "
 			GameTooltip:AddLine(text)
 		end
 	end
 	GameTooltip:Show()
 end
 
-hooksecurefunc("LFGListSearchEntry_Update", PGF.OnLFGListSearchEntryUpdate)
+hooksecurefunc("LFGListSearchEntry_Update", OnLFGListSearchEntryUpdate)
 hooksecurefunc("LFGListSearchEntry_OnEnter", PGF.OnLFGListSearchEntryOnEnter)
-hooksecurefunc("LFGListUtil_SortSearchResults", PGF.DoFilterSearchResults)
+hooksecurefunc("LFGListUtil_SortSearchResults", DoFilterSearchResults)

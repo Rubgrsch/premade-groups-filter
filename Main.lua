@@ -95,13 +95,38 @@ function PGF.ResetSearchEntries()
 	end
 end
 
-function PGF.SortByFriendsAndAge(id1, id2)
-	local _, _, _, _, _, _, _, age1, bnetFriends1, charFriends1, guildMates1 = C_LFGList.GetSearchResultInfo(id1);
-	local _, _, _, _, _, _, _, age2, bnetFriends2, charFriends2, guildMates2 = C_LFGList.GetSearchResultInfo(id2);
-	if bnetFriends1 ~= bnetFriends2 then return bnetFriends1 > bnetFriends2 end
-	if charFriends1 ~= charFriends2 then return charFriends1 > charFriends2 end
-	if guildMates1 ~= guildMates2 then return guildMates1 > guildMates2 end
-	return age1 < age2
+local roleRemainingKeyLookup = {
+	["TANK"] = "TANK_REMAINING",
+	["HEALER"] = "HEALER_REMAINING",
+	["DAMAGER"] = "DAMAGER_REMAINING",
+};
+
+local function HasRemainingSlotsForLocalPlayerRole(lfgSearchResultID)
+	local roles = C_LFGList.GetSearchResultMemberCounts(lfgSearchResultID);
+	local playerRole = GetSpecializationRole(GetSpecialization());
+	return roles[roleRemainingKeyLookup[playerRole]] > 0;
+end
+
+function PGF.SortByFriendsAndAge(searchResultID1, searchResultID2)
+	local searchResultInfo1 = C_LFGList.GetSearchResultInfo(searchResultID1);
+	local searchResultInfo2 = C_LFGList.GetSearchResultInfo(searchResultID2);
+
+	local hasRemainingRole1 = HasRemainingSlotsForLocalPlayerRole(searchResultID1);
+	local hasRemainingRole2 = HasRemainingSlotsForLocalPlayerRole(searchResultID2);
+
+	if hasRemainingRole1 ~= hasRemainingRole2 then return hasRemainingRole1 end
+
+	if searchResultInfo1.numBNetFriends ~= searchResultInfo2.numBNetFriends then
+		return searchResultInfo1.numBNetFriends > searchResultInfo2.numBNetFriends
+	end
+	if searchResultInfo1.numCharFriends ~= searchResultInfo2.numCharFriends then
+		return searchResultInfo1.numCharFriends > searchResultInfo2.numCharFriends
+	end
+	if searchResultInfo1.numGuildMates ~= searchResultInfo2.numGuildMates then
+		return searchResultInfo1.numGuildMates > searchResultInfo2.numGuildMates
+	end
+
+	return searchResultInfo1.age < searchResultInfo2.age
 end
 
 local myGroup = {TANK = 1, HEALER = 1, DAMAGER = 3}
@@ -145,44 +170,41 @@ local function DoFilterSearchResults(results)
 	-- loop backwards through the results list so we can remove elements from the table
 	for idx = #results, 1, -1 do
 		local resultID = results[idx]
-		local id, activity, name, comment, _, iLvl, honorLevel, age,
-			  numBNetFriends, numCharFriends, numGuildMates, isDelisted, leaderName,
-			  numMembers, isAutoAccept = C_LFGList.GetSearchResultInfo(resultID)
-		-- /dump select(3, C_LFGList.GetSearchResultInfo(select(2, C_LFGList.GetSearchResults())[1]))
+		local searchResultInfo = C_LFGList.GetSearchResultInfo(resultID)
+		-- /dump C_LFGList.GetSearchResultInfo(select(2, C_LFGList.GetSearchResults())[1])
 		-- name and comment are now protected strings like "|Ks1969|k0000000000000000|k" which can only be printed
 		local defeatedBossNames = C_LFGList.GetSearchResultEncounterInfo(resultID)
 		local memberCounts = C_LFGList.GetSearchResultMemberCounts(resultID)
-		local numGroupDefeated, numPlayerDefeated, maxBosses,
-			  matching, groupAhead, groupBehind = PGF.GetLockoutInfo(activity, resultID)
-		local avName, avShortName, _, _, _, _,
-			  _, avMaxPlayers = C_LFGList.GetActivityInfo(activity)
-		local difficulty = PGF.GetDifficulty(activity, avName, avShortName)
+		local numGroupDefeated, numPlayerDefeated, maxBosses, matching, groupAhead, groupBehind = PGF.GetLockoutInfo(searchResultInfo.activityID, resultID)
+		local avName, avShortName, _, _, _, _, _, avMaxPlayers, avDisplayType, avOrderIndex, avUseHonorLevel, avShowQuickJoin = C_LFGList.GetActivityInfo(searchResultInfo.activityID)
+		local difficulty = PGF.GetDifficulty(searchResultInfo.activityID, avName, avShortName)
 
 		table.wipe(env)
-		env.activity = activity
+		env.activity = searchResultInfo.activityID
 		env.activityname = avName:lower()
-		env.leader = leaderName and leaderName:lower() or ""
-		env.age = math.floor(age / 60) -- age in minutes
-		env.ilvl = iLvl or 0
-		env.hlvl = honorLevel or 0
-		env.members = numMembers
+		env.leader = searchResultInfo.leaderName and searchResultInfo.leaderName:lower() or ""
+		env.age = math.floor(searchResultInfo.age / 60) -- age in minutes
+		env.ilvl = searchResultInfo.requiredItemLevel or 0
+		env.hlvl = searchResultInfo.requiredHonorLevel or 0
+		env.members = searchResultInfo.numMembers
 		env.tanks = memberCounts.TANK
 		env.heals = memberCounts.HEALER
 		env.healers = memberCounts.HEALER
 		env.dps = memberCounts.DAMAGER + memberCounts.NOROLE
-		env.normal	 = difficulty == C.NORMAL
-		env.heroic	 = difficulty == C.HEROIC
-		env.mythic	 = difficulty == C.MYTHIC
+		env.normal = difficulty == C.NORMAL
+		env.heroic = difficulty == C.HEROIC
+		env.mythic = difficulty == C.MYTHIC
 		env.mythicplus = difficulty == C.MYTHICPLUS
 		env.smart = avMaxPlayers ~= 5 or ((env.tanks <= myGroup.TANK) and (env.healers <= myGroup.HEALER) and (env.dps <= myGroup.DAMAGER))
 
-		env.arena2v2 = activity == 6 or activity == 491
-		env.arena3v3 = activity == 7 or activity == 490
+		local aID = searchResultInfo.activityID
+		env.arena2v2 = aID == 6 or aID == 491
+		env.arena3v3 = aID == 7 or aID == 490
 
 		setmetatable(env, { __index = function(table, key) return 0 end }) -- set non-initialized values to 0
 		if PGF.DoesPassThroughFilter(env, exp) then
 			-- leaderName is usually still nil at this point if the group is new, but we can live with that
-			if leaderName then PGF.currentSearchLeaders[leaderName] = true end
+			if searchResultInfo.leaderName then PGF.currentSearchLeaders[searchResultInfo.leaderName] = true end
 		else
 			table.remove(results, idx)
 		end
@@ -194,21 +216,20 @@ local function DoFilterSearchResults(results)
 end
 
 local function OnLFGListSearchEntryUpdate(self)
-	local resultID, activity, _, _, _, _, _, _, _, _, _, isDelisted, leaderName = C_LFGList.GetSearchResultInfo(self.resultID)
+	local searchResultInfo = C_LFGList.GetSearchResultInfo(self.resultID)
 	-- try once again to update the leaderName (this information is not immediately available)
-	if leaderName then PGF.currentSearchLeaders[leaderName] = true end
+	if searchResultInfo.leaderName then PGF.currentSearchLeaders[searchResultInfo.leaderName] = true end
 	--self.ActivityName:SetText("[" .. activity .. "/" .. resultID .. "] " .. self.ActivityName:GetText()) -- DEBUG
-	if not isDelisted then
+	if not searchResultInfo.isDelisted then
 		-- color name if new
 		if PGF.currentSearchExpression ~= "true"						-- not trivial search
 		and PGF.currentSearchExpression == PGF.previousSearchExpression -- and the same search
-		and (leaderName and not PGF.previousSearchLeaders[leaderName]) then			  -- and leader is new
+		and (searchResultInfo.leaderName and not PGF.previousSearchLeaders[searchResultInfo.leaderName]) then -- and leader is new
 			local color = C.COLOR_ENTRY_NEW
-			self.Name:SetTextColor(color.R, color.G, color.B);
+			self.Name:SetTextColor(color.R, color.G, color.B)
 		end
 		-- color activity if lockout
-		local numGroupDefeated, numPlayerDefeated, maxBosses,
-			  matching, groupAhead, groupBehind = PGF.GetLockoutInfo(activity, resultID)
+		local numGroupDefeated, numPlayerDefeated, maxBosses, matching, groupAhead, groupBehind = PGF.GetLockoutInfo(searchResultInfo.activityID, self.resultID)
 		local color
 		if numPlayerDefeated > 0 and numPlayerDefeated == maxBosses then
 			color = C.COLOR_LOCKOUT_FULL
@@ -225,21 +246,20 @@ local roles = {}
 local classInfo = {}
 function PGF.OnLFGListSearchEntryOnEnter(self)
 	local resultID = self.resultID
-	local _, activity, _, _, _, _, _, _, _, _, _, isDelisted, _, numMembers = C_LFGList.GetSearchResultInfo(resultID)
-	local _, _, _, _, _, _, _, _, displayType = C_LFGList.GetActivityInfo(activity);
+	local searchResultInfo = C_LFGList.GetSearchResultInfo(resultID)
+	local _, _, _, _, _, _, _, _, displayType = C_LFGList.GetActivityInfo(searchResultInfo.activityID)
 
 	-- do not show members where Blizzard already does that
 	if displayType == LE_LFG_LIST_DISPLAY_TYPE_CLASS_ENUMERATE then return end
-	if isDelisted or not GameTooltip:IsShown() then return end
+	if searchResultInfo.isDelisted or not GameTooltip:IsShown() then return end
 	GameTooltip:AddLine(" ")
-	GameTooltip:AddLine(CLASS_ROLES);
+	GameTooltip:AddLine(CLASS_ROLES)
 
 	table.wipe(roles)
-	for i = 1, numMembers do
-		local role, class, classLocalized = C_LFGList.GetSearchResultMemberInfo(resultID, i);
+	for i = 1, searchResultInfo.numMembers do
+		local role, class, classLocalized = C_LFGList.GetSearchResultMemberInfo(resultID, i)
 		if not classInfo[class] then
-			classInfo[class] =
-			{
+			classInfo[class] = {
 				name = classLocalized,
 				color = (RAID_CLASS_COLORS[class] or NORMAL_FONT_COLOR).colorStr
 			}

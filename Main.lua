@@ -196,6 +196,7 @@ local function DoFilterSearchResults(results)
 		env.heroic = difficulty == C.HEROIC
 		env.mythic = difficulty == C.MYTHIC
 		env.mythicplus = difficulty == C.MYTHICPLUS
+		env.declined = PGF.IsDeclinedGroup(searchResultInfo)
 		env.smart = avMaxPlayers ~= 5 or ((env.tanks <= myGroup.TANK) and (env.healers <= myGroup.HEALER) and (env.dps <= myGroup.DAMAGER))
 
 		local aID = searchResultInfo.activityID
@@ -220,6 +221,16 @@ local function GetDeclinedGroupsKey(searchResultInfo)
 	return searchResultInfo.activityID .. searchResultInfo.leaderName
 end
 
+local function IsDeclinedGroup(searchResultInfo)
+    if searchResultInfo.leaderName then -- leaderName is not available for brand new groups
+        local lastDeclined = PGF.declinedGroups[GetDeclinedGroupsKey(searchResultInfo)] or 0
+        if lastDeclined > time() - C.DECLINED_GROUPS_RESET then
+            return true
+        end
+    end
+    return false
+end
+
 function PGF.OnLFGListApplicationStatusUpdated(id, newStatus)
 	local searchResultInfo = C_LFGList.GetSearchResultInfo(id)
 	if newStatus == "declined" and searchResultInfo.leaderName then -- leaderName is not available for brand new groups
@@ -241,11 +252,9 @@ local function OnLFGListSearchEntryUpdate(self)
 			self.Name:SetTextColor(color.R, color.G, color.B)
 		end
 		-- color name if declined
-		if searchResultInfo.leaderName then -- leaderName is not available for brand new groups
-			local lastDeclined = PGF.declinedGroups[GetDeclinedGroupsKey(searchResultInfo)] or 0
-			if lastDeclined > time() - C.DECLINED_GROUPS_RESET then
-				self.Name:SetTextColor(0.5, 0.1, 0.1)
-			end
+        if IsDeclinedGroup(searchResultInfo) then
+            local color = C.COLOR_ENTRY_DECLINED
+            self.Name:SetTextColor(color.R, color.G, color.B)
 		end
 		-- color activity if lockout
 		local numGroupDefeated, numPlayerDefeated, maxBosses, matching, groupAhead, groupBehind = PGF.GetLockoutInfo(searchResultInfo.activityID, self.resultID)

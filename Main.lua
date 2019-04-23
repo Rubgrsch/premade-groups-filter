@@ -221,7 +221,7 @@ local function GetDeclinedGroupsKey(searchResultInfo)
 	return searchResultInfo.activityID .. searchResultInfo.leaderName
 end
 
-local function IsDeclinedGroup(searchResultInfo)
+function PGF.IsDeclinedGroup(searchResultInfo)
     if searchResultInfo.leaderName then -- leaderName is not available for brand new groups
         local lastDeclined = PGF.declinedGroups[GetDeclinedGroupsKey(searchResultInfo)] or 0
         if lastDeclined > time() - C.DECLINED_GROUPS_RESET then
@@ -252,7 +252,7 @@ local function OnLFGListSearchEntryUpdate(self)
 			self.Name:SetTextColor(color.R, color.G, color.B)
 		end
 		-- color name if declined
-        if IsDeclinedGroup(searchResultInfo) then
+        if PGF.IsDeclinedGroup(searchResultInfo) then
             local color = C.COLOR_ENTRY_DECLINED
             self.Name:SetTextColor(color.R, color.G, color.B)
 		end
